@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    volumes:
+      - ${ROOT}:/opt/project
+      - ${ROOT}/.venv:/root/.local/share/virtualenvs
+    command: pipenv run python app.py
+    working_dir: /opt/project
+  redis:
+    image: 'redis:latest'

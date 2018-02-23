@@ -1,0 +1,22 @@
+[[source]]
+
+verify_ssl = true
+url = "https://pypi.python.org/simple"
+name = "pypi"
+
+
+[dev-packages]
+
+grpcio-tools = ">=1.9.1"
+docker-compose = ">=1.19.0"
+
+
+[requires]
+
+python_version = "3.6.4"
+
+
+[packages]
+
+protobuf = ">=3.5.1"
+grpcio = ">=1.9.1"
