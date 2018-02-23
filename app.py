@@ -1,27 +1,29 @@
-import asyncio
-from proto.math_pb2 import AddRequest
+from concurrent import futures
+import grpc
+from proto.math_pb2_grpc import MathServiceServicer, add_MathServiceServicer_to_server
 import time
 
-a = AddRequest()
 
-a.x = 5
-a.y = 9
-
-print(AddRequest.SerializeToString(a))
+class MathService(MathServiceServicer):
+    def add(self, request, context):
+        raise ValueError("hi!")
 
 
-async def slow_print(name, i):
-    await asyncio.sleep(i)
-    print("Hello, %s" % name)
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
+    add_MathServiceServicer_to_server(MathService(), server)
+
+    server.add_insecure_port('[::]:8000')
+    server.start()
+
+    print('started server on [::]:8000')
+
+    try:
+        while True:
+            time.sleep(1000)
+    except KeyboardInterrupt:
+        server.stop(0)
 
 
-async def main():
-    loop = asyncio.get_event_loop()
-    t1 = loop.create_task(slow_print('mehdi', 5))
-    t2 = loop.create_task(slow_print('sadegh', 1))
-    await asyncio.sleep(10)
-
-
-mainLoop = asyncio.get_event_loop()
-mainLoop.run_until_complete(main())
-mainLoop.close()
+if __name__ == '__main__':
+    serve()

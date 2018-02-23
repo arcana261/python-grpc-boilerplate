@@ -8,5 +8,12 @@ services:
       - ${ROOT}/.venv:/root/.local/share/virtualenvs
     command: pipenv run python app.py
     working_dir: /opt/project
+  client:
+    build: .
+    volumes:
+      - ${ROOT}:/opt/project
+      - ${ROOT}/.venv:/root/.local/share/virtualenvs
+    command: pipenv run python client.py
+    working_dir: /opt/project
   redis:
     image: 'redis:latest'

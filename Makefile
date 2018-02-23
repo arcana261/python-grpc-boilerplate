@@ -28,7 +28,7 @@ ifeq ($(HAS_DOCKER_IMAGE), 0)
 endif
 
 $(PROTO_DIR)/%_pb2.py $(PROTO_DIR)/%_pb2_grpc.py: $(PROTO_DIR)/%.proto .touch/.dev_dep
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && $(PROTOC) -Iproto/ --python_out=proto/ --grpc_python_out=proto/ $< && chown $$uid:$$uid $(patsubst %.proto,%_pb2.py,$<) && chown $$uid:$$uid $(patsubst %.proto,%_pb2_grpc.py,$<)'
+	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && $(PROTOC) -I. --python_out=. --grpc_python_out=. $< && chown $$uid:$$uid $(patsubst %.proto,%_pb2.py,$<) && chown $$uid:$$uid $(patsubst %.proto,%_pb2_grpc.py,$<)'
 
 .touch/.dev_dep: .touch/.dev_docker Pipfile
 	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv install --dev && chown -R $$uid:$$uid /root/.local/share/virtualenvs && chown $$uid:$$uid $(DEST_DIR)/Pipfile.lock'
