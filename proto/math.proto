@@ -9,6 +9,9 @@ message AddResponse {
   int32 result = 1;
 }
 
+message MathError {
+  string message = 1;
+}
 
 service MathService {
   rpc add(AddRequest) returns (AddResponse);
