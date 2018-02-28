@@ -2,7 +2,7 @@ from concurrent import futures
 import grpc
 from google.protobuf.any_pb2 import Any
 
-from proto.math_pb2 import MathError
+from proto.math_pb2 import MathError, AddResponse
 from proto.math_pb2_grpc import MathServiceServicer, add_MathServiceServicer_to_server
 import time
 
@@ -13,6 +13,7 @@ class MathService(MathServiceServicer):
         details.Pack(MathError(message="salam!"))
         context.set_code(grpc.StatusCode.UNAVAILABLE)
         context.set_details(details.SerializeToString())
+        return AddResponse()
 
 
 def serve():
