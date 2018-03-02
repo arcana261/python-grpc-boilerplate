@@ -1,5 +1,6 @@
 import grpc
 from google.protobuf.any_pb2 import Any
+from google.protobuf.struct_pb2 import Struct
 
 from proto.math_pb2 import AddRequest, MathError
 from proto.math_pb2_grpc import MathServiceStub
@@ -14,6 +15,8 @@ def run():
     except Exception as e:
         code = e.code()
         details = Any.FromString(bytearray(e.details(), 'ascii'))
+
+        Struct
 
         if (details.Is(MathError.DESCRIPTOR)):
             math_error = MathError()

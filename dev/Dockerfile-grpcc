@@ -1,0 +1,6 @@
+FROM node:9.6.1
+
+USER root
+RUN npm config set user 0 && npm config set unsafe-perm true && npm install -g grpcc
+
+VOLUME ["/opt/project"]

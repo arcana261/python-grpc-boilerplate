@@ -2,18 +2,25 @@ version: '3'
 
 services:
   app:
-    build: .
+    image: ${NAME}_dev
     volumes:
       - ${ROOT}:/opt/project
       - ${ROOT}/.venv:/root/.local/share/virtualenvs
     command: pipenv run python app.py
     working_dir: /opt/project
   client:
-    build: .
+    image: ${NAME}_dev
     volumes:
       - ${ROOT}:/opt/project
       - ${ROOT}/.venv:/root/.local/share/virtualenvs
     command: pipenv run python client.py
     working_dir: /opt/project
+  grpcc:
+    image: ${NAME}_grpcc_dev
+    volumes:
+      - ${ROOT}:/opt/project
+    working_dir: /opt/project
+    entrypoint: /bin/bash
+    command: -c "while true; do sleep 1; done"
   redis:
     image: 'redis:latest'
