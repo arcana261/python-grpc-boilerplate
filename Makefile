@@ -1,4 +1,4 @@
-.PHONY: dev dev-generate dev-install dev-up dev-down clean
+.PHONY: dev dev-generate dev-install dev-up dev-down clean dev-grpcc
 
 PROTO_DIR?=proto
 
@@ -25,6 +25,8 @@ dev-up: .pre-check dev .touch/.dev_docker_compose
 	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run docker-compose -f dev/docker-compose.yml up'
 dev-down: .pre-check dev .touch/.dev_docker_compose
 	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run docker-compose -f dev/docker-compose.yml down'
+dev-grpcc: .pre-check dev .touch/.dev_docker_compose
+	$(ROOT_DIR)/bin/grpcc.sh -i -p proto/math.proto -a app:8000
 
 .pre-check: .venv
 ifeq ($(HAS_DOCKER_IMAGE), 0)
