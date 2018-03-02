@@ -1,19 +1,16 @@
 syntax = "proto3";
 
-message AddRequest {
-  int32 x = 1;
-  int32 y = 2;
+package math;
+
+message Value {
+  double value = 1;
 }
 
-message AddResponse {
-  int32 result = 1;
-}
-
-message MathError {
-  string message = 1;
+message Result {
+  double result = 1;
 }
 
 service MathService {
-  rpc add(AddRequest) returns (AddResponse);
+  rpc add(stream Value) returns (Result);
 }
 
