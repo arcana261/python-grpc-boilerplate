@@ -8,6 +8,10 @@ services:
       - ${ROOT}/.venv:/root/.local/share/virtualenvs
     command: pipenv run python app.py
     working_dir: /opt/project
+    ports:
+      - 8000:8000
+    depends_on:
+      - redis
   client:
     image: ${NAME}_dev
     volumes:
@@ -22,5 +26,7 @@ services:
     working_dir: /opt/project
     entrypoint: /bin/bash
     command: -c "while true; do sleep 1; done"
+    depends_on:
+      - app
   redis:
     image: 'redis:latest'

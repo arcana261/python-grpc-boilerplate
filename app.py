@@ -23,7 +23,7 @@ class GracefulKiller:
 def serve():
     killer = GracefulKiller()
 
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=20))
     add_MathServiceServicer_to_server(MathServicer(), server)
 
     server.add_insecure_port('[::]:8000')

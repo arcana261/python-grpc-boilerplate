@@ -10,6 +10,8 @@ class MathServicer(MathServiceServicer):
         result = 0.0
         logger.info('add got called!')
         for request in request_iterator:
+            if not context.is_active():
+                break
             logger.info('read {} from input!'.format(request.value))
             result = result + request.value
         logger.info('add result is {}'.format(result))
