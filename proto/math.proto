@@ -2,6 +2,10 @@ syntax = "proto3";
 
 package math;
 
+message More {
+  int32 count = 1;
+}
+
 message Value {
   double value = 1;
 }
@@ -10,7 +14,8 @@ message Result {
   double result = 1;
 }
 
-service MathService {
+service Math {
   rpc add(stream Value) returns (Result);
+  rpc fibonachi_stream(stream More) returns (stream Result);
 }
 

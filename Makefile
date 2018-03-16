@@ -1,4 +1,4 @@
-.PHONY: dev dev-generate dev-install dev-up dev-down clean dev-grpcc
+.PHONY: dev dev-generate dev-install dev-up dev-down clean dev-grpcc test coverage lint check
 
 PROTO_DIR?=proto
 
@@ -27,6 +27,14 @@ dev-down: .pre-check dev .touch/.dev_docker_compose
 	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run docker-compose -f dev/docker-compose.yml down'
 dev-grpcc: .pre-check dev .touch/.dev_docker_compose
 	$(ROOT_DIR)/bin/grpcc.sh -i -p proto/math.proto -a app:8000
+test: .pre-check dev
+	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run python -m unittest'
+coverage: .pre-check dev
+	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run py.test --cov=. && chown $$uid:$$uid .coverage'
+lint: .pre-check dev
+	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run pycodestyle --show-source --show-pep8 --config=.pycodestyle settings servicer util'
+check: .pre-check dev
+	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv check'
 
 .pre-check: .venv
 ifeq ($(HAS_DOCKER_IMAGE), 0)
@@ -77,4 +85,3 @@ $(PROTO_DIR)/%_pb2.py $(PROTO_DIR)/%_pb2_grpc.py: $(PROTO_DIR)/%.proto .touch/.d
 	$(DOCKER) build -t $(NAME)_grpcc_dev -f dev/Dockerfile-grpcc dev/
 	$(MKDIR) -p .touch
 	$(TOUCH) .touch/.dev_grpcc_build
-

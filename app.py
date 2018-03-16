@@ -1,9 +1,11 @@
 from concurrent import futures
 import grpc
 import signal
-from proto.math_pb2_grpc import add_MathServiceServicer_to_server
-from servicer import MathServicer
 import time
+
+import settings
+from proto.math_pb2_grpc import add_MathServicer_to_server
+from servicer import Math
 from util import getLogger
 
 logger = getLogger(__name__)
@@ -21,15 +23,19 @@ class GracefulKiller:
 
 
 def serve():
+    logger.info('starting server on environment {}'.format(settings.env))
+    for setting in settings:
+        logger.info('{} = {}'.format(setting, getattr(settings, setting)))
+
     killer = GracefulKiller()
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=20))
-    add_MathServiceServicer_to_server(MathServicer(), server)
+    add_MathServicer_to_server(Math(), server)
 
-    server.add_insecure_port('[::]:8000')
+    server.add_insecure_port('[::]:{}'.format(settings.PORT))
     server.start()
 
-    logger.info('started server on [::]:8000')
+    logger.info('started server on [::]:{}'.format(settings.PORT))
 
     try:
         while not killer.kill_now:

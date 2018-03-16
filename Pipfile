@@ -9,12 +9,14 @@ name = "pypi"
 
 grpcio-tools = ">=1.9.1"
 docker-compose = ">=1.19.0"
-ipython = "*"
+ipython = ">=6.2.1"
+pytest-cov = ">=2.5.1"
+pycodestyle = ">=2.3.1"
 
 
 [requires]
 
-python_version = "3.6.4"
+python_version = "3.6"
 
 
 [packages]

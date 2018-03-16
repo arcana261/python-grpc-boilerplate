@@ -12,6 +12,8 @@ services:
       - 8000:8000
     depends_on:
       - redis
+    environment:
+      - ENV=dev
   client:
     image: ${NAME}_dev
     volumes:
@@ -19,6 +21,10 @@ services:
       - ${ROOT}/.venv:/root/.local/share/virtualenvs
     command: pipenv run python client.py
     working_dir: /opt/project
+    depends_on:
+      - app
+    environment:
+      - ENV=dev
   grpcc:
     image: ${NAME}_grpcc_dev
     volumes:

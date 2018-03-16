@@ -1,2 +1,1 @@
-from servicer.math import MathServicer
-
+from servicer.math import Math
