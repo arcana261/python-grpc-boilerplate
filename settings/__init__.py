@@ -67,7 +67,7 @@ class SettingManager:
 
     def __iter__(self):
         chained = itertools.chain(getattr(self._default, '__dict__', dict()).keys(),
-                                        getattr(self._env, '__dict__', dict()).keys())
+                                  getattr(self._env, '__dict__', dict()).keys())
 
         for _, values in self._loaded:
             chained = itertools.chain(chained, values.keys())
