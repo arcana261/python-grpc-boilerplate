@@ -24,6 +24,9 @@ parts:
     - libffi-dev
     - libssl-dev
     - ca-certificates
+    - libsqlite3-dev
+    - sqlite3
+    - sqlite
 
 environment:
   PYTHONUSERBASE: $SNAP_USER_DATA

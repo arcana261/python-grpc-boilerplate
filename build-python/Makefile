@@ -99,6 +99,9 @@ endif
 ifeq ($(shell which bash),)
 	$(error bash not found, please ensure availability of bash command)
 endif
+ifeq ($(shell which touch),)
+	$(error touch not found, please ensure availability of touch command)
+endif
 ifeq ($(PROJECT_NAME),NONE)
 	$(error provide PROJECT_NAME environment correctly, like PROJECT_NAME=foo make)
 endif
