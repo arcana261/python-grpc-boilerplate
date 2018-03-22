@@ -108,3 +108,6 @@ endif
 ifneq ($(shell uname -i),x86_64)
 	$(error this build is only supported for x86_64 systems)
 endif
+ifeq ($(shell snap list | grep "^$(SNAP_NAME)\s"),)
+	rm -fv .INSTALL
+endif
