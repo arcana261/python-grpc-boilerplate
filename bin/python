@@ -2,5 +2,4 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-cd $DIR/.. && make check
-$DIR/../build-python/bin/exec "python $@"
+$DIR/exec "python $@"

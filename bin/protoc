@@ -2,4 +2,4 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-$DIR/pipenv.sh "run docker-compose $@"
+$DIR/python "-m grpc_tools.protoc $@"

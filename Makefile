@@ -1,87 +1,55 @@
-.PHONY: dev dev-generate dev-install dev-up dev-down clean dev-grpcc test coverage lint check
+.PHONY: python pipenv check install clean generate test coverage build
 
-PROTO_DIR?=proto
+include common.in
 
-DOCKER=docker
-TOUCH=touch
-MKDIR=mkdir
-RM=rm
-DEST_DIR=/opt/project
+EXEC := $(if $(filter-out 0,$(USE_SYSTEM_PYTHON)),/bin/sh -c,./build/python/bin/exec)
+EXEC_FIRST := $(firstword $(EXEC))
+PROTOS := $(wildcard src/**/*.proto)
+PB2S := $(addsuffix _pb2.py,$(basename $(PROTOS)))
+PB2_GRPCS := $(addsuffix _pb2_grpc.py,$(basename $(PROTOS)))
 
-ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-NAME:=$(notdir $(ROOT_DIR))
-DOCKER_RUN=$(DOCKER) run -it --rm -e "uid=`id -u`" -e "ROOT=$(ROOT_DIR)" -e "NAME=$(NAME)" -v $(ROOT_DIR):$(DEST_DIR) -v $(ROOT_DIR)/.venv:/root/.local/share/virtualenvs -v /var/run/docker.sock:/var/run/docker.sock $(NAME)_dev
-PROTOC=pipenv run python -m grpc_tools.protoc
-PROTOS=$(wildcard $(PROTO_DIR)/*.proto)
-PB2S=$(patsubst %.proto,%_pb2.py,$(PROTOS))
-GRPC_PB2S=$(patsubst %.proto,%_pb2_grpc.py,$(PROTOS))
-HAS_DOCKER_IMAGE:=$(shell docker images | grep -c $(NAME)_dev)
-HAS_DOCKER_GRPCC_IMAGE:=$(shell docker images | grep -c $(NAME)_grpcc_dev)
+build: generate
 
-dev: .pre-check dev-generate dev-install
-dev-generate: .pre-check $(PB2S) $(GRPC_PB2S)
-dev-install: .pre-check .touch/.dev_dep
-dev-up: .pre-check dev .touch/.dev_docker_compose
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run docker-compose -f dev/docker-compose.yml up'
-dev-down: .pre-check dev .touch/.dev_docker_compose
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run docker-compose -f dev/docker-compose.yml down'
-dev-grpcc: .pre-check dev .touch/.dev_docker_compose
-	$(ROOT_DIR)/bin/grpcc.sh -i -p proto/math.proto -a app:8000
-test: .pre-check dev
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run python -m unittest'
-coverage: .pre-check dev
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run py.test --cov=. && chown $$uid:$$uid .coverage'
-lint: .pre-check dev
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run pycodestyle --show-source --show-pep8 --config=.pycodestyle settings servicer util'
-check: .pre-check dev
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv check'
-
-.pre-check: .venv
-ifeq ($(HAS_DOCKER_IMAGE), 0)
-	rm -rfv .touch 2>/dev/null; true
+python:
+ifeq ($(USE_SYSTEM_PYTHON),0)
+	cd build/python && PROJECT_NAME=$(PROJECT_NAME) make install
 endif
-ifeq ($(HAS_DOCKER_GRPCC_IMAGE),0)
-	rm -rfv .touch 2>/dev/null; true
+	/bin/sh -c 'export INSTALLED=0; if [ -f $(EXEC_FIRST) ]; then export INSTALLED="`$(EXEC) "which python"`"; fi; if [ "$$INSTALLED" = "" ]; then echo "python not found"; exit 1; fi'
+
+pipenv: python
+	/bin/sh -c 'export INSTALLED=0; if [ -f $(EXEC_FIRST) ]; then export INSTALLED="`$(EXEC) "which pip"`"; fi; if [ "$$INSTALLED" = "" ]; then echo "pip not found"; exit 1; fi'
+	/bin/sh -c 'export INSTALLED=0; if [ -f $(EXEC_FIRST) ]; then export INSTALLED="`$(EXEC) "pip show pipenv 2> /dev/null"`"; fi; if [ "$$INSTALLED" = "" ]; then $(EXEC) "pip install --user pipenv"; fi'
+
+check: pipenv
+	$(EXEC) "pipenv check"
+
+install: Pipfile.lock
+
+Pipfile.lock: Pipfile | pipenv
+ifeq ($(RELEASE_BUILD),0)
+	$(EXEC) "pipenv install --dev"
+else
+	$(EXEC) "pipenv install"
 endif
 
 clean:
-ifneq ($(HAS_DOCKER_IMAGE), 0)
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run docker-compose -f dev/docker-compose.yml down'
-endif
-	$(DOCKER) rmi $(NAME)_dev 2>/dev/null; true
-	$(DOCKER) rmi $(NAME)_grpcc_dev 2>/dev/null; true
-	$(RM) -fv $(PB2S) $(GRPC_PB2S) 2>/dev/null; true
-	$(RM) -rfv .venv 2>/dev/null; true
-	$(RM) -rfv .touch 2>/dev/null; true
+	-./build/python/bin/exec "pipenv --rm"
+	-pipenv --rm
+	-rm -fv Pipfile.lock
+	-rm -fv $(PB2S) $(PB2_GRPCS)
+	-cd build/python && PROJECT_NAME=$(PROJECT_NAME) make clean
 
-.touch/.dev_docker_compose: .touch/.dev_docker dev/docker-compose.yml
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run docker-compose -f dev/docker-compose.yml down'
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv run docker-compose -f dev/docker-compose.yml up --no-start'
-	$(MKDIR) -p .touch
-	$(TOUCH) .touch/.dev_docker_compose
+generate: $(PB2S) $(PB2_GRPCS)
 
-$(PROTO_DIR)/%_pb2.py $(PROTO_DIR)/%_pb2_grpc.py: $(PROTO_DIR)/%.proto .touch/.dev_dep
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && $(PROTOC) -I. --python_out=. --grpc_python_out=. $< && chown $$uid:$$uid $(patsubst %.proto,%_pb2.py,$<) && chown $$uid:$$uid $(patsubst %.proto,%_pb2_grpc.py,$<)'
+.SECONDEXPANSION:
+$(PB2S) $(PB2_GRPCS): $$(patsubst %_pb2_grpc.py,%.proto,$$(patsubst %_pb2.py,%.proto,$$(firstword $$@))) Pipfile.lock | install
+	$(EXEC) "pipenv run python -m grpc_tools.protoc -Isrc --python_out=src --grpc_python_out=src $<"
 
-.touch/.dev_dep: .touch/.dev_docker Pipfile
-	$(DOCKER_RUN) bash -c 'cd $(DEST_DIR) && pipenv install --dev && chown -R $$uid:$$uid /root/.local/share/virtualenvs && chown $$uid:$$uid $(DEST_DIR)/Pipfile.lock'
-	$(MKDIR) -p .touch
-	$(TOUCH) .touch/.dev_dep
+test: build
+	$(EXEC) "cd src && pipenv run python -m unittest"
 
-.touch/.dev_docker: .venv .touch/.dev_build .touch/.dev_grpcc_build
-	$(MKDIR) -p .touch
-	$(TOUCH) .touch/.dev_docker
+coverage: build
+	$(EXEC) "cd src && pipenv run py.test --cov=."
 
-.venv:
-	$(MKDIR) -p .venv
-	$(RM) .touch/.dev_dep 2>/dev/null; true
-
-.touch/.dev_build: dev/Dockerfile
-	$(DOCKER) build -t $(NAME)_dev dev/
-	$(MKDIR) -p .touch
-	$(TOUCH) .touch/.dev_build
-
-.touch/.dev_grpcc_build: dev/Dockerfile-grpcc
-	$(DOCKER) build -t $(NAME)_grpcc_dev -f dev/Dockerfile-grpcc dev/
-	$(MKDIR) -p .touch
-	$(TOUCH) .touch/.dev_grpcc_build
+lint: build
+	$(EXEC) "pipenv run pycodestyle --show-source --show-pep8 --config=.pycodestyle src"

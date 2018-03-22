@@ -41,7 +41,7 @@ help:
 	@echo "    clean:   clean all built files and remove snap package from system"
 	@echo "    help:    show this help message"
 
-snap/snapcraft.yaml: snap.in/snapcraft.yaml snap
+snap/snapcraft.yaml: snap.in/snapcraft.yaml | snap
 	cat $< | sed -e "s|\$${PROJECT_NAME}|$(PROJECT_NAME)|g" > $@
 
 snap:
@@ -55,7 +55,7 @@ $(SNAP_PACKAGE): snap/snapcraft.yaml
 	touch .INSTALL
 
 .SECONDEXPANSION:
-$(BIN_OUT): $(addprefix bin.in/,$$(notdir $$@)) bin
+$(BIN_OUT): $(addprefix bin.in/,$$(notdir $$@)) | bin
 	cat $< | sed -e "s|\$${SNAP_NAME}|$(SNAP_NAME)|g" > $@
 	chmod +x $@
 
@@ -102,6 +102,9 @@ endif
 ifeq ($(shell which touch),)
 	$(error touch not found, please ensure availability of touch command)
 endif
+ifeq ($(shell which rm),)
+	$(error rm not found, please ensure availability of rm command)
+endif
 ifeq ($(PROJECT_NAME),NONE)
 	$(error provide PROJECT_NAME environment correctly, like PROJECT_NAME=foo make)
 endif
@@ -112,5 +115,5 @@ ifneq ($(shell uname -i),x86_64)
 	$(error this build is only supported for x86_64 systems)
 endif
 ifeq ($(shell snap list | grep "^$(SNAP_NAME)\s"),)
-	rm -fv .INSTALL
+	-rm -fv .INSTALL
 endif

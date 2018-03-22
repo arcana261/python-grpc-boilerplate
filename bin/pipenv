@@ -2,5 +2,8 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-cd $DIR/.. && make pipenv
-$DIR/../build-python/bin/exec "pipenv $@"
+if [ "$USE_SYSTEM_PYTHON" = "1" ]; then
+	/usr/bin/env sh -c "pipenv $@"
+else
+	$DIR/../build/python/bin/exec "pipenv $@"
+fi
