@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+USER_BASE=$($DIR/python -c 'import os; print(os.getenv("PYTHONUSERBASE"))')
+
+PATH="$DIR:$USER_BASE:$USER_BASE/bin:$PATH" PYTHONUSERBASE=$USER_BASE /usr/bin/env sh -c "$@"

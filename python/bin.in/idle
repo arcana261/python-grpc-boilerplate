@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+${SNAP_NAME}.idle "$@"
